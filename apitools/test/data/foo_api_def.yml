@@ -1,0 +1,17 @@
+base_url: 'http://127.0.0.1:8000'
+requests:
+    - uri: /api/foo
+      method: POST
+      requests:
+          - data:
+              key-a: v-a
+              key-b: v-b
+          - data:
+              key-A: v-A
+              key-B: v-B
+    - uri: /api/bar
+      method: GET
+      requests:
+          - params:
+              query-a: v-a
+              query-b: v-b

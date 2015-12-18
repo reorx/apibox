@@ -2,7 +2,7 @@
 # coding: utf-8
 
 """
-``foo_api_def.yml``
+``foo_api_def.yml``:
 
 base_url: 'http://127.0.0.1:8000'
 requests:
@@ -22,7 +22,8 @@ requests:
               query-a: v-a
               query-b: v-b
 
-``foo_api_test.py``
+
+``foo_api_test.py``:
 
 from apitools.testing import yield_requests
 
@@ -30,6 +31,10 @@ from apitools.testing import yield_requests
 def test_foo_api():
     for request_func, args in yield_requests(__file__, 'foo_api_test.yml'):
         yield request_func, args
+
+
+Run using nosetest:
+$ nosetests -s foo_api_test.py
 """
 
 import requests
