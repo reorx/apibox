@@ -3,6 +3,7 @@
 
 from urllib import urlencode
 import requests
+from .log import logger
 
 
 class APIBase(object):
@@ -27,7 +28,7 @@ class APIBase(object):
     default_content_type = 'text'  # or 'json'
     token_config = None
     #token_config = {
-    #    'in': ['params'],  # or contains 'header'
+    #    'in': 'params',  # or 'headers'
     #    'key': None
     #}
 
@@ -61,10 +62,17 @@ class APIBase(object):
             url += '?' + urlencode(params)
         return url
 
+    def get_headers(self):
+        headers = {}
+        if self.token_is_in('headers'):
+            token_key = self.token_config['key']
+            headers[token_key] = self.token_config['value']
+        return headers
+
     def token_is_in(self, position):
         if not self.token_config:
             return False
-        return position in self.token_config['in']
+        return position == self.token_config['in']
 
     def make_req(self, uri, *args, **kwargs):
         """
@@ -98,9 +106,11 @@ class APIBase(object):
             params[token_key] = self.token_config['value']
 
         url = self.get_url(uri, params)
+        headers = self.get_headers()
         requester = getattr(requests, method)
-        print '[REQUEST] %s %s' % (requester.__name__, uri)
-        resp = requester(url)
+
+        logger.info('[REQUEST] %s %s', requester.__name__, uri)
+        resp = requester(url, headers=headers)
 
         if content_type == 'json':
             return resp.json()

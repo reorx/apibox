@@ -44,7 +44,7 @@ def test_get_with_params():
     assert body['url'] == BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'c': 1})
 
 
-def test_get_with_params_and_token():
+def test_get_with_token():
     class BinAPI(APIBase):
         base_url = 'http://httpbin.org'
         default_content_type = 'json'
@@ -57,16 +57,28 @@ def test_get_with_params_and_token():
             },
         }
         token_config = {
-            'in': ['params'],  # or contains 'header'
+            'in': 'params',
             'key': 'token'
         }
 
+    token = 'asdf123'
+
+    # No token, raise
     with assert_raises(ValueError):
         api = BinAPI()
 
-    token = 'asdf123'
+    # token in url
     api = BinAPI(token)
     body = api.get()
 
-    print body['url']
+    print 'url', body['url']
     assert body['url'] == BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'token': token})
+
+    # token in header
+    BinAPI.token_config['in'] = 'headers'
+    BinAPI.token_config['key'] = 'X-Token'
+    api = BinAPI(token)
+    body = api.get()
+
+    print 'headers', body['headers']
+    assert body['headers'].get('X-Token') == token
