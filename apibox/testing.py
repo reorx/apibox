@@ -25,7 +25,7 @@ requests:
 
 ``foo_api_test.py``:
 
-from apitools.testing import yield_requests
+from apibox.testing import yield_requests
 
 
 def test_foo_api():

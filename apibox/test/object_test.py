@@ -3,7 +3,7 @@
 
 from nose.tools import assert_raises
 from urllib import urlencode
-from apitools.object import APIBase
+from apibox.object import APIBase
 
 
 def test_get():

@@ -4,4 +4,4 @@
 import logging
 
 
-logger = logging.getLogger('apitools')
+logger = logging.getLogger('apibox')

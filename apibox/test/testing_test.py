@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from apitools.testing import yield_requests
+from apibox.testing import yield_requests
 
 
 def test_yield_requests():

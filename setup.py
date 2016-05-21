@@ -24,15 +24,15 @@ def get_long_description():
 
 setup(
     # license='License :: OSI Approved :: MIT License',
-    name='apitools',
+    name='apibox',
     version=version,
     author='reorx',
     author_email='novoreorx@gmail.com',
     description='Building blocks for HTTP API development',
-    url='https://github.com/reorx/apitools',
+    url='https://github.com/reorx/apibox',
     long_description=get_long_description(),
     packages=[
-        'apitools',
+        'apibox',
     ],
     # Or use (make sure find_packages is imported from setuptools):
     # packages=find_packages()
