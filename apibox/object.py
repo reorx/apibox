@@ -1,10 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from urllib import urlencode
+import json
 import requests
+from urllib import urlencode
 from .log import logger
 
+# TODO uri alias
+
+CONTENT_TYPE_HEADER_MAP = {
+    'text': 'text/plain; charset=utf-8',
+    'json': 'application/json; charset=utf-8',
+    'form': 'application/x-www-form-urlencoded; charset=utf-8',
+    'multipart': 'multipart/form-data; charset=utf-8; boundary=__X_APIBOX_BOUNDARY__',
+}
 
 class APIBase(object):
     """
@@ -25,7 +34,7 @@ class APIBase(object):
     """
     base_url = None
     uris = None
-    default_content_type = 'text'  # or 'json'
+    default_content_type = 'text'  # or 'json', 'form'
     token_config = None
     #token_config = {
     #    'in': 'params',  # or 'headers'
@@ -62,19 +71,63 @@ class APIBase(object):
             url += '?' + urlencode(params)
         return url
 
-    def get_headers(self):
-        headers = {}
+    def get_params(self, options, params):
+        _params = options.get('default_params', {})
+        _params.update(params or {})
+
+        if self.token_is_in('params'):
+            token_key = self.token_config['key']
+            _params[token_key] = self.token_config['value']
+
+        params = _params
+        return params or None
+
+    def get_data(self, options, data):
+        content_type = options.get('content_type', self.default_content_type)
+        if data:
+            if content_type == 'json':
+                if isinstance(data, dict):
+                    data = json.dumps(data)
+                elif isinstance(data, str):
+                    pass
+                else:
+                    raise InvalidRequestArguments(
+                        '`data` should not be of type {} when content_type is json'.format(type(data)))
+            return data
+        else:
+            return None
+
+    def get_headers(self, options, headers):
+        _headers = options.get('default_headers', {})
+        _headers.update(headers or {})
+
+        content_type = options.get('content_type', self.default_content_type)
+        _headers['Content-Type'] = CONTENT_TYPE_HEADER_MAP[content_type]
+
         if self.token_is_in('headers'):
             token_key = self.token_config['key']
-            headers[token_key] = self.token_config['value']
-        return headers
+            _headers[token_key] = self.token_config['value']
+
+        headers = _headers
+        return headers or None
 
     def token_is_in(self, position):
         if not self.token_config:
             return False
         return position == self.token_config['in']
 
-    def make_req(self, uri, *args, **kwargs):
+    def check_arguments(self, options, params, data, headers, files):
+        method = options['method']
+        # data is only allowed when POST, PUT, PATCH
+        if data:
+            if method not in ['POST', 'PUT', 'PATCH']:
+                raise InvalidRequestArguments('`data` is not allowed on {}'.format(method))
+        # files is only allowed when POST, PUT, PATCH
+        if files:
+            if method not in ['POST', 'PUT', 'PATCH']:
+                raise InvalidRequestArguments('`files` is not allowed on {}'.format(method))
+
+    def make_req(self, uri, params=None, data=None, headers=None, files=None, **kwargs):
         """
         kwargs:
         - params
@@ -84,38 +137,37 @@ class APIBase(object):
             'method': 'GET',
             'content_type': 'text',
             'default_params': {'a': 1},
+            'default_headers': {'b': 'B'},
         }
         """
         try:
             options = self.uris[uri]
         except KeyError:
             raise Exception('URI %s is not in uris' % uri)
-        method = options['method'].lower()
+        method_lower = options['method'].lower()
 
-        # handle `content_type`
-        content_type = options.get('content_type', self.default_content_type)
+        self.check_arguments(options, params, data, headers, files)
 
-        # handle `default_params`
-        params = options.get('default_params', {})
-        passing_params = kwargs.get('params', {})
-        params.update(passing_params)
+        # get params
+        params = self.get_params(options, params)
 
-        # handle token
-        if self.token_is_in('params'):
-            token_key = self.token_config['key']
-            params[token_key] = self.token_config['value']
+        # get data
+        data = self.get_data(options, data)
 
+        # get headers
+        headers = self.get_headers(options, headers)
+
+        # get url
         url = self.get_url(uri, params)
-        headers = self.get_headers()
-        requester = getattr(requests, method)
+
+        requester = getattr(requests, method_lower)
 
         logger.info('[REQUEST] %s %s', requester.__name__, uri)
-        resp = requester(url, headers=headers)
+        resp = requester(
+            url, params=params, data=data, headers=headers,
+            files=files, **kwargs)
 
-        if content_type == 'json':
-            return resp.json()
-        else:  # == 'text'
-            return resp.content
+        return resp
 
 
 class ResourcePath(object):
@@ -142,3 +194,7 @@ class ResourcePath(object):
 
     def __str__(self):
         return '<ResourcePath %s>' % self.get_path()
+
+
+class InvalidRequestArguments(Exception):
+    pass
