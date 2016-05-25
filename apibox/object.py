@@ -38,7 +38,8 @@ class APIBase(object):
     token_config = None
     #token_config = {
     #    'in': 'params',  # or 'headers'
-    #    'key': None
+    #    'key': None,
+    #    'value': None,
     #}
 
     def __init__(self, token=None):
@@ -49,6 +50,9 @@ class APIBase(object):
             raise ValueError('`uris` is required')
 
         if self.token_config:
+            # To avoid instances writing a same dict object
+            self.token_config = dict(self.token_config)
+
             if not self.token_config.get('key'):
                 raise ValueError('`key` in `token_config` is required')
 
@@ -162,11 +166,12 @@ class APIBase(object):
 
         requester = getattr(requests, method_lower)
 
-        logger.info('[REQUEST] %s %s', requester.__name__, uri)
+        logger.info('[REQUEST] %s %s; Headers: %s', requester.__name__, uri, headers)
         resp = requester(
             url, params=params, data=data, headers=headers,
             files=files, **kwargs)
 
+        logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:100])
         return resp
 
 
