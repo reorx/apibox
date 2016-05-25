@@ -5,6 +5,7 @@ import json
 import requests
 from urllib import urlencode
 from .log import logger
+from .utils import to_utf8
 
 # TODO uri alias
 
@@ -14,6 +15,7 @@ CONTENT_TYPE_HEADER_MAP = {
     'form': 'application/x-www-form-urlencoded; charset=utf-8',
     'multipart': 'multipart/form-data; charset=utf-8; boundary=__X_APIBOX_BOUNDARY__',
 }
+
 
 class APIBase(object):
     """
@@ -83,7 +85,8 @@ class APIBase(object):
             token_key = self.token_config['key']
             _params[token_key] = self.token_config['value']
 
-        params = _params
+        # ensure every k & v are str
+        params = {to_utf8(k): to_utf8(v) for k, v in _params.iteritems()}
         return params or None
 
     def get_data(self, options, data):
