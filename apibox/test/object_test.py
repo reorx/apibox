@@ -1,9 +1,35 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import logging
 from nose.tools import assert_raises
+from nose.plugins.attrib import attr
 from urllib import urlencode
 from apibox.object import APIBase
+
+
+logging.basicConfig(level=logging.INFO)
+
+
+@attr('basic')
+def test_define():
+    class BinAPI(APIBase):
+        base_url = 'http://httpbin.org'
+        default_content_type = 'json'
+        uris = {
+            '/get': {
+                'method': 'GET'
+            },
+            '/get/(\w+)/wtf': {
+                'method': 'GET'
+            },
+        }
+
+    print BinAPI.method_defs
+
+    api = BinAPI()
+    resp = api.get.wtf('hello')
+    print 'resp', resp
 
 
 def test_get():
