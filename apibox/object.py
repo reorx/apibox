@@ -109,7 +109,10 @@ class APIBase(object):
         _headers.update(headers or {})
 
         content_type = options.get('content_type', self.default_content_type)
-        _headers['Content-Type'] = CONTENT_TYPE_HEADER_MAP[content_type]
+        if content_type in CONTENT_TYPE_HEADER_MAP:
+            _headers['Content-Type'] = CONTENT_TYPE_HEADER_MAP[content_type]
+        else:
+            _headers['Content-Type'] = content_type
 
         if self.token_is_in('headers'):
             token_key = self.token_config['key']
