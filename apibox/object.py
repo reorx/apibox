@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
 import json
 import requests
 from urllib import urlencode
@@ -15,6 +16,36 @@ CONTENT_TYPE_HEADER_MAP = {
     'form': 'application/x-www-form-urlencoded; charset=utf-8',
     'multipart': 'multipart/form-data; charset=utf-8; boundary=__X_APIBOX_BOUNDARY__',
 }
+
+
+class APIBaseMeta(type):
+    def __new__(cls, name, bases, attrs):
+        uris = attrs.get('uris')
+        method_defs = {}
+        if uris:
+            for uri, options in uris.iteritems():
+                method_parts = []
+                template_parts = []
+                args = []
+                for seg in filter(lambda x: x, uri.split('/')):
+                    if re.search(r'^\(.+\)$', seg):
+                        template_parts.append('{}')
+                        args.append(
+                            re.compile(seg)
+                        )
+                    else:
+                        method_parts.append(seg)
+                        template_parts.append(seg)
+
+                method_defs['.'.join(method_parts)] = {
+                    'uri_template': '/' + '/'.join(template_parts),
+                    'args': args,
+                    'options': options
+                }
+
+        attrs['method_defs'] = method_defs
+
+        return type.__new__(cls, name, bases, attrs)
 
 
 class APIBase(object):
@@ -34,6 +65,8 @@ class APIBase(object):
     >>> api = API(token)
     >>> body = api.posts.all(raw=True)
     """
+    __metaclass__ = APIBaseMeta
+
     base_url = None
     uris = None
     default_content_type = 'text'  # or 'json', 'form'
@@ -137,10 +170,33 @@ class APIBase(object):
             if method not in ['POST', 'PUT', 'PATCH']:
                 raise InvalidRequestArguments('`files` is not allowed on {}'.format(method))
 
-    def make_req(self, uri, params=None, data=None, headers=None, files=None, **kwargs):
+    def call_method(self, method_path, *args, **kwargs):
+        # print 'call_method', method_path, args, kwargs
+        if method_path not in self.method_defs:
+            raise ValueError('No uri for {} method'.format(method_path))
+
+        method_def = self.method_defs[method_path]
+        argps = method_def['args']
+        if len(args) != len(argps):
+            raise ValueError('Invalid arguments number, get {}, should be {}'.format(len(args), len(argps)))
+
+        for i, argp in enumerate(argps):
+            arg = args[i]
+            rv = argp.match(arg)
+            if not rv:
+                raise ValueError('{}st Argument {} not match with {}'.format(i, arg, argp))
+
+        uri = method_def['uri_template'].format(*args)
+
+        return self._make_req(uri, method_def['options'], **kwargs)
+
+    def _make_req(self, uri, options, params=None, data=None, headers=None, files=None, **kwargs):
         """
         kwargs:
         - params
+        - date
+        - headers
+        - files
 
         uri supported options:
         {
@@ -150,10 +206,6 @@ class APIBase(object):
             'default_headers': {'b': 'B'},
         }
         """
-        try:
-            options = self.uris[uri]
-        except KeyError:
-            raise Exception('URI %s is not in uris' % uri)
         method_lower = options['method'].lower()
 
         self.check_arguments(options, params, data, headers, files)
@@ -191,7 +243,8 @@ class ResourcePath(object):
         return ResourcePath(self._api, name, self)
 
     def __call__(self, *args, **kwargs):
-        return self._api.make_req(self.get_path(), *args, **kwargs)
+        method_path = self.get_path()
+        return self._api.call_method(method_path, *args, **kwargs)
 
     def get_path(self):
         names = []
@@ -201,7 +254,7 @@ class ResourcePath(object):
             names.insert(0, rp._name)
             rp = rp._parent
 
-        return '/' + '/'.join(names)
+        return '.'.join(names)
 
     def __str__(self):
         return '<ResourcePath %s>' % self.get_path()
