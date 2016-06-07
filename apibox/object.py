@@ -225,11 +225,18 @@ class APIBase(object):
         requester = getattr(requests, method_lower)
 
         logger.info('[REQUEST] %s %s; Headers: %s', requester.__name__, uri, headers)
-        resp = requester(
-            url, params=params, data=data, headers=headers,
-            files=files, **kwargs)
+        try:
+            resp = requester(
+                url, params=params, data=data, headers=headers,
+                files=files, **kwargs)
+        except Exception as e:
+            raise ResponseError('Request failed by: {} - {}'.format(type(e), e))
 
         logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:100])
+        return self.process_response(uri, options, resp)
+
+    def process_response(self, uri, options, resp):
+        """Override to implement how to process the response for each request"""
         return resp
 
 
@@ -261,4 +268,8 @@ class ResourcePath(object):
 
 
 class InvalidRequestArguments(Exception):
+    pass
+
+
+class ResponseError(Exception):
     pass
