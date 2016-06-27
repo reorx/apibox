@@ -205,6 +205,7 @@ class APIBase(object):
             'default_params': {'a': 1},
             'default_headers': {'b': 'B'},
         }
+        :raises: RequestsError
         """
         method_lower = options['method'].lower()
 
@@ -230,7 +231,7 @@ class APIBase(object):
                 url, params=params, data=data, headers=headers,
                 files=files, **kwargs)
         except Exception as e:
-            raise ResponseError('Request failed by: {} - {}'.format(type(e), e))
+            raise RequestsError('requests failed by: {} - {}'.format(type(e), e))
 
         logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:100])
         return self.process_response(uri, options, resp)
@@ -271,5 +272,5 @@ class InvalidRequestArguments(Exception):
     pass
 
 
-class ResponseError(Exception):
-    pass
+class RequestsError(Exception):
+    """requests failed"""
