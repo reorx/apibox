@@ -114,3 +114,19 @@ def test_get_with_token():
 
     print 'headers', body['headers']
     assert body['headers'].get('X-Token') == token
+
+
+def test_timeout():
+    class BinAPI(APIBase):
+        base_url = 'http://httpbin.org'
+        uris = {
+            '/delay/(\d)': {
+                'method': 'GET',
+            },
+        }
+        timeout = 2
+
+    api = BinAPI()
+    with assert_raises(RequestsError):
+        resp = api.delay(3)
+        print resp

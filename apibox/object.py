@@ -76,6 +76,7 @@ class APIBase(object):
     #    'key': None,
     #    'value': None,
     #}
+    timeout = None
 
     def __init__(self, token=None):
         # Check attributes
@@ -180,7 +181,7 @@ class APIBase(object):
 
         for i, argp in enumerate(argps):
             arg = args[i]
-            rv = argp.match(arg)
+            rv = argp.match(str(arg))
             if not rv:
                 raise ValueError('{}st Argument {} not match with {}'.format(i, arg, argp))
 
