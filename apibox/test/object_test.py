@@ -2,10 +2,10 @@
 # coding: utf-8
 
 import logging
-from nose.tools import assert_raises
+from nose.tools import assert_raises, eq_
 from nose.plugins.attrib import attr
 from urllib import urlencode
-from apibox.object import APIBase
+from apibox.object import APIBase, RequestsError
 
 
 logging.basicConfig(level=logging.INFO)
@@ -46,8 +46,8 @@ def test_get():
     body = api.get()
     print type(body)
 
-    print body['url']
-    assert body['url'] == BinAPI.base_url + '/get'
+    print body
+    assert body.json()['url'] == BinAPI.base_url + '/get'
 
 
 def test_get_with_params():
@@ -64,7 +64,9 @@ def test_get_with_params():
         }
 
     api = BinAPI()
-    body = api.get(params={'c': 1})
+    resp = api.get(params={'c': 1})
+    print resp
+    body = resp.json()
 
     print body['url']
     assert body['url'] == BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'c': 1})
@@ -95,16 +97,20 @@ def test_get_with_token():
 
     # token in url
     api = BinAPI(token)
-    body = api.get()
+    resp = api.get()
+    print resp
+    body = resp.json()
 
     print 'url', body['url']
-    assert body['url'] == BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'token': token})
+    eq_(body['url'], BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'token': token}))
 
     # token in header
     BinAPI.token_config['in'] = 'headers'
     BinAPI.token_config['key'] = 'X-Token'
     api = BinAPI(token)
-    body = api.get()
+    resp = api.get()
+    print resp
+    body = resp.json()
 
     print 'headers', body['headers']
     assert body['headers'].get('X-Token') == token

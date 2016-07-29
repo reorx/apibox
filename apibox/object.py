@@ -104,10 +104,8 @@ class APIBase(object):
     def __getattr__(self, name):
         return ResourcePath(self, name)
 
-    def get_url(self, uri, params=None):
+    def get_url(self, uri):
         url = self.base_url + uri
-        if params:
-            url += '?' + urlencode(params)
         return url
 
     def get_params(self, options, params):
@@ -221,19 +219,28 @@ class APIBase(object):
         headers = self.get_headers(options, headers)
 
         # get url
-        url = self.get_url(uri, params)
+        url = self.get_url(uri)
+
+        # set default kwargs
+        if self.timeout is not None:
+            if 'timeout' not in kwargs:
+                kwargs['timeout'] = self.timeout
 
         requester = getattr(requests, method_lower)
 
-        logger.info('[REQUEST] %s %s; Headers: %s', requester.__name__, uri, headers)
+        print 'uri', uri
+        logger.info('[REQUEST] %s %s; Headers: %s', requester.__name__, url, headers)
         try:
             resp = requester(
-                url, params=params, data=data, headers=headers,
-                files=files, **kwargs)
+                url, params=params,
+                data=data,
+                headers=headers,
+                files=files,
+                **kwargs)
         except Exception as e:
             raise RequestsError('requests failed by: {} - {}'.format(type(e), e))
 
-        logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:100])
+        logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:500])
         return self.process_response(uri, options, resp)
 
     def process_response(self, uri, options, resp):
