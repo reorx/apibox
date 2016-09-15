@@ -8,6 +8,11 @@ from urllib import urlencode
 from .log import logger
 from .utils import to_utf8
 
+# TODO support:
+# api.notes.GET()
+# api.notes['123'].GET()
+
+
 # TODO uri alias
 
 CONTENT_TYPE_HEADER_MAP = {
@@ -229,7 +234,7 @@ class APIBase(object):
 
         requester = getattr(requests, method_lower)
 
-        print 'uri', uri
+        # print 'uri', uri
         logger.info('[REQUEST] %s %s; Headers: %s', requester.__name__, url, headers)
         try:
             resp = requester(
@@ -241,7 +246,7 @@ class APIBase(object):
         except Exception as e:
             raise RequestsError('requests failed by: {} - {}'.format(type(e), e))
 
-        logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:500])
+        logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:200])
         return self.process_response(uri, options, resp)
 
     def process_response(self, uri, options, resp):
