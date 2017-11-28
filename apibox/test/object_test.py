@@ -4,7 +4,10 @@
 import logging
 from nose.tools import assert_raises, eq_
 from nose.plugins.attrib import attr
-from urllib import urlencode
+try:
+    from urllib.parse import urlencode
+except ImportError:
+    from urllib import urlencode
 from apibox.object import APIBase, RequestsError
 
 

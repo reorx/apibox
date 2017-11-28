@@ -4,7 +4,7 @@
 import re
 import json
 import requests
-from urllib import urlencode
+from six import with_metaclass
 from .log import logger
 from .utils import to_utf8
 
@@ -28,11 +28,11 @@ class APIBaseMeta(type):
         uris = attrs.get('uris')
         method_defs = {}
         if uris:
-            for uri, options in uris.iteritems():
+            for uri, options in uris.items():
                 method_parts = []
                 template_parts = []
                 args = []
-                for seg in filter(lambda x: x, uri.split('/')):
+                for seg in [x for x in uri.split('/') if x]:
                     if re.search(r'^\(.+\)$', seg):
                         template_parts.append('{}')
                         args.append(
@@ -53,7 +53,7 @@ class APIBaseMeta(type):
         return type.__new__(cls, name, bases, attrs)
 
 
-class APIBase(object):
+class APIBase(with_metaclass(APIBaseMeta, object)):
     """
     Usage:
 
@@ -70,7 +70,6 @@ class APIBase(object):
     >>> api = API(token)
     >>> body = api.posts.all(raw=True)
     """
-    __metaclass__ = APIBaseMeta
 
     base_url = None
     uris = None
@@ -123,7 +122,7 @@ class APIBase(object):
             _params[token_key] = self.token_config['value']
 
         # ensure every k & v are str
-        params = {to_utf8(k): to_utf8(v) for k, v in _params.iteritems()}
+        params = {to_utf8(k): to_utf8(v) for k, v in _params.items()}
         return params or None
 
     def get_data(self, options, data):
