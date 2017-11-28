@@ -25,11 +25,11 @@ def test_define():
             },
         }
 
-    print BinAPI.method_defs
+    print(BinAPI.method_defs)
 
     api = BinAPI()
     resp = api.get.wtf('hello')
-    print 'resp', resp
+    print('resp', resp)
 
 
 def test_get():
@@ -44,9 +44,9 @@ def test_get():
 
     api = BinAPI()
     body = api.get()
-    print type(body)
+    print(type(body))
 
-    print body
+    print(body)
     assert body.json()['url'] == BinAPI.base_url + '/get'
 
 
@@ -65,10 +65,10 @@ def test_get_with_params():
 
     api = BinAPI()
     resp = api.get(params={'c': 1})
-    print resp
+    print(resp)
     body = resp.json()
 
-    print body['url']
+    print(body['url'])
     assert body['url'] == BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'c': 1})
 
 
@@ -98,10 +98,10 @@ def test_get_with_token():
     # token in url
     api = BinAPI(token)
     resp = api.get()
-    print resp
+    print(resp)
     body = resp.json()
 
-    print 'url', body['url']
+    print('url', body['url'])
     eq_(body['url'], BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'token': token}))
 
     # token in header
@@ -109,10 +109,10 @@ def test_get_with_token():
     BinAPI.token_config['key'] = 'X-Token'
     api = BinAPI(token)
     resp = api.get()
-    print resp
+    print(resp)
     body = resp.json()
 
-    print 'headers', body['headers']
+    print('headers', body['headers'])
     assert body['headers'].get('X-Token') == token
 
 
@@ -129,4 +129,4 @@ def test_timeout():
     api = BinAPI()
     with assert_raises(RequestsError):
         resp = api.delay(3)
-        print resp
+        print(resp)

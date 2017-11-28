@@ -91,7 +91,7 @@ def do_request(req_args):
     kwargs = {i: args[i] for i in args
               if i in ['params', 'data', 'headers', 'cookies']}
     resp = func(args['url'], **kwargs)
-    print resp.status_code, resp.content
+    print(resp.status_code, resp.content)
     assert resp.status_code == 200
 
 
