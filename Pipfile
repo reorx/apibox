@@ -6,9 +6,11 @@ name = "pypi"
 [packages]
 requests = "*"
 six = "*"
-
 # TODO add pytest and pyyaml, remove dev-requirements.txt
+
 [dev-packages]
+pyyaml = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.6"

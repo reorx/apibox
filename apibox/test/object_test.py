@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
-# TODO use pytest instead of nose
 
 import logging
-from nose.tools import assert_raises, eq_
-from nose.plugins.attrib import attr
-try:
-    from urllib.parse import urlencode
-except ImportError:
-    from urllib import urlencode
+import pytest
+from six.moves.urllib.parse import urlencode
 from apibox.object import APIBase, RequestsError
 
 
 logging.basicConfig(level=logging.INFO)
 
 
-@attr('basic')
 def test_define():
     class BinAPI(APIBase):
         base_url = 'http://httpbin.org'
@@ -92,11 +86,11 @@ def test_get_with_token():
             'key': 'token'
         }
 
-    token = 'asdf123'
+    token = 'fake-token'
 
     # No token, raise
-    with assert_raises(ValueError):
-        api = BinAPI()
+    with pytest.raises(ValueError):
+        BinAPI()
 
     # token in url
     api = BinAPI(token)
@@ -105,7 +99,7 @@ def test_get_with_token():
     body = resp.json()
 
     print('url', body['url'])
-    eq_(body['url'], BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'token': token}))
+    assert body['url'] == BinAPI.base_url + '/get?' + urlencode({'a': 'b', 'token': token})
 
     # token in header
     BinAPI.token_config['in'] = 'headers'
@@ -130,6 +124,6 @@ def test_timeout():
         timeout = 2
 
     api = BinAPI()
-    with assert_raises(RequestsError):
+    with pytest.raises(RequestsError):
         resp = api.delay(3)
         print(resp)

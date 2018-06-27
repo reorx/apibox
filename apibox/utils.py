@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import sys
-
-
-PY2 = sys.version_info.major == 2
+import six
 
 
 def to_utf8(s):
-    if PY2:
-        if isinstance(s, unicode):
+    if six.PY2:
+        if isinstance(s, six.text_type):
             return s.encode('utf8')
     return s
