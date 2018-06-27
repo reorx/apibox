@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import re
@@ -67,7 +66,7 @@ class APIBase(with_metaclass(APIBaseMeta, object)):
     ...             'method': 'GET'
     ...         },
     ...     }
-    >>> api = API(token)
+    >>> api = PinboardAPI('api-token')
     >>> body = api.posts.all(raw=True)
     """
 
@@ -75,11 +74,11 @@ class APIBase(with_metaclass(APIBaseMeta, object)):
     uris = None
     default_content_type = 'text'  # or 'json', 'form'
     token_config = None
-    #token_config = {
+    # token_config = {
     #    'in': 'params',  # or 'headers'
     #    'key': None,
     #    'value': None,
-    #}
+    # }
     timeout = None
 
     def __init__(self, token=None):
@@ -162,7 +161,9 @@ class APIBase(with_metaclass(APIBaseMeta, object)):
             return False
         return position == self.token_config['in']
 
-    def check_arguments(self, options, params, data, headers, files):
+    # noinspection PyUnusedLocal
+    @staticmethod
+    def check_arguments(options, params, data, headers, files):
         method = options['method']
         # data is only allowed when POST, PUT, PATCH
         if data:
@@ -248,6 +249,7 @@ class APIBase(with_metaclass(APIBaseMeta, object)):
         logger.info('[RESPONSE] %s %s', resp.status_code, resp.content[:200])
         return self.process_response(uri, options, resp)
 
+    # noinspection PyMethodMayBeStatic,PyUnusedLocal
     def process_response(self, uri, options, resp):
         """Override to implement how to process the response for each request"""
         return resp
