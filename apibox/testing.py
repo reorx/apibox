@@ -24,11 +24,12 @@ requests:
 
 ``foo_api_test.py``:
 
+import yaml
 from apibox.testing import yield_requests
 
 
 def test_foo_api():
-    for request_func, args in yield_requests(__file__, 'foo_api_test.yml'):
+    for request_func, args in yield_requests('foo_api_test.yml', yaml.load):
         yield request_func, args
 
 
@@ -36,13 +37,11 @@ Run using nosetest:
 $ nosetests -s foo_api_test.py
 """
 
-import requests
-import requests.models
 import json
-import yaml
 import copy
 import types
-import os
+import requests
+import requests.models
 
 
 class RequestArguments(object):
@@ -66,6 +65,7 @@ class RequestArguments(object):
     def params_str(self):
         params = self.arguments.get('params')
         if params:
+            # noinspection PyProtectedMember
             return requests.models.RequestEncodingMixin._encode_params(params)
         return ''
 
@@ -111,11 +111,14 @@ def yield_args(args, df):
         yield args
 
 
-def yield_requests(current_path, filename):
-    filepath = os.path.join(
-        os.path.dirname(current_path), filename)
-    with open(filepath, 'r') as f:
-        requests_def = yaml.load(f.read())
+def yield_requests(spec_path, yaml_parser):
+    """
+    :param spec_path: yaml spec file path
+    :param yaml_parser: function to parse yaml string to dict, e.g. yaml.load
+    :return: yield do_request function and RequestArguments instance
+    """
+    with open(spec_path, 'r') as f:
+        requests_def = yaml_parser(f.read())
 
     for args in yield_args({}, requests_def):
         yield do_request, RequestArguments(args)

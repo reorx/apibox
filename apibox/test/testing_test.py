@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import yaml
 from apibox.testing import yield_requests
 
 
 def test_yield_requests():
     arguments_list = []
-    for func, reqargs in yield_requests(__file__, 'data/foo_api_def.yml'):
+    for func, reqargs in yield_requests('data/foo_api_def.yml', yaml.load):
         arguments_list.append(reqargs.arguments)
 
     # POST /api/foo
