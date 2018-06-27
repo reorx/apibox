@@ -6,7 +6,6 @@ name = "pypi"
 [packages]
 requests = "*"
 six = "*"
-# TODO add pytest and pyyaml, remove dev-requirements.txt
 
 [dev-packages]
 pyyaml = "*"
