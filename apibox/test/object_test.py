@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-# coding: utf-8
+# -*- coding: utf-8 -*-
+# TODO use pytest instead of nose
 
 import logging
 from nose.tools import assert_raises, eq_
