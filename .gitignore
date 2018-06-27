@@ -16,5 +16,4 @@
 docs/_build/
 
 # Others #
-.virtualenv
-venv/
+.idea/
